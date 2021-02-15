@@ -1,0 +1,48 @@
+version: '3'
+services:
+  db:
+    image: mysql:8
+    ports: 
+      - "3306:3306"
+    # restart: always
+    environment:
+      MYSQL_DATABASE: test
+      MYSQL_ROOT_PASSWORD: root
+    networks:
+      - backdb
+    
+
+  back:
+    build:
+      context: ./user-authorizer
+    image: karliatr/ministry-back
+    container_name: ministry-back
+    ports:
+      - "9999:9999"
+    # restart: always
+    depends_on:
+      - db
+    environment: # Pass environment variables to the service
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/test
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+    networks:
+      - frontback 
+      - backdb
+
+  front:
+    build: ./ministry
+    image: karliatr/ministry-front
+    container_name: ministry-front
+    ports:
+      - 8080:8080
+    depends_on:
+      - back
+    networks:
+      - frontback
+
+networks:
+  backdb:
+    driver: bridge
+  frontback:
+    driver: bridge
